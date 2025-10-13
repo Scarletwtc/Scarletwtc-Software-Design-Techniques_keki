@@ -36,7 +36,7 @@ With this Smart Cake Shop Management System:
 The **Smart Cake Shop Management System** leverages multiple design patterns to ensure **clean, maintainable, and reusable code**. These patterns follow the principles taught in the course, and are applied to core aspects of the system: menu management, inventory tracking, staff coordination, and order processing.
 
 
-| **Pattern** | **Type** | **Use in SCMS / Justification** |
+| **Pattern** | **Type** | **Justification** |
 |-------------|---------|--------------------------------|
 | **Singleton** | Creational | Ensures a single instance of the **InventoryManager** class, centralizing ingredient tracking and preventing inconsistent stock data. This avoids multiple sources of truth for inventory and simplifies management. |
 | **Factory Method** | Creational | Used to create **Order** objects of different types (custom cake, standard cake, drinks) without exposing the instantiation logic. This allows flexibility in adding new order types in the future, adhering to the **Open/Closed Principle**. |
