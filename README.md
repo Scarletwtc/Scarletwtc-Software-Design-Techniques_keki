@@ -5,7 +5,7 @@
 
 - **El-Ghoul Layla** — GitHub [@scarletwtc](https://github.com/scarletwtc)  
 - **Mahmoud Mirghani Abdelrahman** — GitHub [@Abd210](https://github.com/Abd210)  
-- **Uritu Andra-Ioana** — GitHub [@andraurity](https://github.com/andrauritu)
+- **Uritu Andra-Ioana** — GitHub [@andrauritu](https://github.com/andrauritu)
 
 # Project Description 
 
