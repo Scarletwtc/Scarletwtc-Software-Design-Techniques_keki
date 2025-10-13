@@ -5,7 +5,7 @@
 
 - **El-Ghoul Layla** — GitHub [@scarletwtc](https://github.com/scarletwtc)  
 - **Mahmoud Mirghani Abdelrahman** — GitHub [@Abd210](https://github.com/Abd210)  
-- **Uritu Andra-Ioana** — GitHub [@andraurity](https://github.com/andrauritu)
+- **Uritu Andra-Ioana** — GitHub [@andrauritu](https://github.com/andrauritu)
 
 # Project Description 
 
@@ -46,8 +46,9 @@ The **Smart Cake Shop Management System** leverages multiple design patterns to 
 | **Observer** | Behavioral | Enables **Chef** and **Staff** modules to automatically receive updates when an **Order** status changes, ensuring smooth workflow and timely notifications. This reduces tight coupling and improves maintainability. |
 | **Strategy** | Behavioral | Allows the **Manager** to dynamically change pricing strategies or discount policies without modifying core menu or order classes. This promotes flexibility and adheres to **SRP**. |
 | **Proxy** | Structural | Provides controlled access to **sensitive manager operations**, such as viewing sales reports, enforcing security and encapsulation. This reduces the risk of unauthorized access. |
+| **Delegation** | Structural | The Manager gives order validation and inventory checking to separate classes. This keeps each class focused on one job and avoids repeating code. |
 
-**Why:** These patterns were chosen to:  
+**Why these patterns:** 
 1. **Simplify object creation** : Singleton, Factory Method, Builder 
 2. **Decouple modules and improve maintainability** : Observer, Strategy, Proxy
 3. **Support future extension** without modifying existing code : OCP, flexible pattern use 
