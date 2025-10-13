@@ -20,8 +20,6 @@ With this Smart Cake Shop Management System:
 
 **Keki’s Smart Cake Shop Management System aims to increase operational efficiency, reduce errors, and provide accurate tracking of inventory and orders, ensuring both staff and customers enjoy a smooth and organized experience.**
 
-### Core Features
-
 
 ### Core Features
 | **Role** | **Key Features** |
