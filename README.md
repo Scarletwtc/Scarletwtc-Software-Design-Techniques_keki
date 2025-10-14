@@ -53,7 +53,7 @@ The **Smart Cake Shop Management System** leverages multiple design patterns to 
 | **Pattern** | **Type** | **Justification** |
 |-------------|---------|--------------------------------|
 | **Singleton** | Creational | Used for the **InventoryManager** to ensure there’s only one global source of truth for ingredient data. This prevents conflicts between concurrent operations (e.g., multiple chefs accessing stock simultaneously). Unlike using static variables, Singleton allows controlled access, lazy initialization, and future extension if database connections are introduced. |
-| **Factory Method** | Creational | Handles the creation of **Order** objects (custom cakes, standard cakes, drinks) without exposing instantiation details. Compared to simple constructors, the Factory Method centralizes creation logic, making it easier to introduce new order types (like gift boxes or catering orders) without altering existing code, the **Open/Closed Principle**. |
+| **Factory Method** | Creational | Handles the creation of **Order** objects (custom cakes, standard cakes, drinks) without exposing instantiation details. Compared to simple constructors, the Factory Method centralizes creation logic, making it easier to introduce new order types (like gift boxes or catering orders) without altering existing code, following the **Open/Closed Principle**. |
 | **Builder** | Creational |  Used for constructing complex **MenuItem** or **Cake** objects that can vary in ingredients, size, and decoration. Instead of cluttering constructors with multiple optional parameters, Builder allows step-by-step configuration, making code more readable, flexible, and reusable across different cake combinations. |
 | **Observer** | Behavioral | Keeps **Chef** and **Staff** modules in sync with **Order** status updates. When a manager or chef updates an order, all subscribed observers (e.g., staff) are notified automatically. This pattern ensures real-time updates and eliminates unnecessary coupling between components. |
 | **Strategy** | Behavioral |Lets the **Manager** switch between different pricing or discount algorithms dynamically (e.g., holiday discounts, loyalty points). Instead of embedding multiple conditional statements, Strategy encapsulates each pricing method in its own class. |
@@ -65,4 +65,6 @@ The **Smart Cake Shop Management System** leverages multiple design patterns to 
 2. **Decouple modules and improve maintainability** : Observer, Strategy, Proxy
 3. **Support future extension** without modifying existing code : OCP, flexible pattern use 
 4. **Increase code reuse and clarity** : delegation where necessary
+
+In summary, the Smart Cake Shop Management System applies a combination of creational, behavioral, and structural design patterns to create a scalable architecture. These patterns work together to promote flexibility, reduce redundancy, and make the system adaptable for future extensions, such as integrating online orders or multi-branch management.
 
