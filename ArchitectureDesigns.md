@@ -3,7 +3,6 @@
 
 # Monolithic Architecture
 
-
 A monolithic architecture design puts all of the application's components in one single unit.
 
 If we were to use it for keki, it would be like this:
@@ -33,18 +32,16 @@ Everything runs as a single process.
 
 ![monolith1](monolith1.png)
 
-
 ## Pros
-
 * Everything runs in one process
 * Simple and easy to understand
 * low complexity
 * consistent
 * Fast development and deployment
 
-
 ## Cons
-
 * Limited scalability
 * It is more difficult to make modifications
 * Any small change required redeploying the whole application
+
+# 
