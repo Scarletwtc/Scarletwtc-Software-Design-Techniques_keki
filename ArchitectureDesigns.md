@@ -31,6 +31,7 @@ Everything runs as a single process.
 
 **Figure 1: Monolithic Architecture**
 
+![monolith1](monolith1.png)
 
 
 ## Pros
