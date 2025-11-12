@@ -32,6 +32,7 @@ Everything runs as a single process.
 **Figure 1: Monolithic Architecture**
 
 
+
 ## Pros
 
 * Everything runs in one process
