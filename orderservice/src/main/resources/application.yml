@@ -1,0 +1,26 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: orderservice
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:ordersdb}
+    username: ${DB_USER:orders_user}
+    password: ${DB_PASSWORD:orders_pass}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+inventory:
+  service:
+    url: ${INVENTORY_SERVICE_URL:http://localhost:8082}
+
+kitchen:
+  service:
+    url: ${KITCHEN_SERVICE_URL:http://localhost:8083}
+
+

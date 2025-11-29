@@ -1,0 +1,34 @@
+# General
+*.log
+*.tmp
+*.swp
+*.DS_Store
+Thumbs.db
+
+# Maven / Java build outputs
+**/target/
+*.iml
+
+# IntelliJ IDEA
+.idea/
+out/
+
+# VS Code
+.vscode/
+
+# OS / editor junk
+*.bak
+*.orig
+
+# Docker
+*.env
+
+# Node/npm (in case future frontends are added)
+node_modules/
+dist/
+build/
+
+# Cursor / editor-specific project metadata
+.cursor/
+
+

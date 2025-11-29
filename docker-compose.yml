@@ -1,0 +1,93 @@
+version: "3.9"
+
+services:
+  orderservice-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ordersdb
+      POSTGRES_USER: orders_user
+      POSTGRES_PASSWORD: orders_pass
+    ports:
+      - "5433:5432"
+    networks:
+      - keki-net
+
+  inventoryservice-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: inventorydb
+      POSTGRES_USER: inventory_user
+      POSTGRES_PASSWORD: inventory_pass
+    ports:
+      - "5434:5432"
+    networks:
+      - keki-net
+
+  kitchenservice-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: kitchendb
+      POSTGRES_USER: kitchen_user
+      POSTGRES_PASSWORD: kitchen_pass
+    ports:
+      - "5435:5432"
+    networks:
+      - keki-net
+
+  orderservice:
+    build:
+      context: ./orderservice
+    depends_on:
+      - orderservice-db
+      - inventoryservice
+    environment:
+      DB_HOST: orderservice-db
+      DB_PORT: 5432
+      DB_NAME: ordersdb
+      DB_USER: orders_user
+      DB_PASSWORD: orders_pass
+      INVENTORY_SERVICE_URL: http://inventoryservice:8082
+      KITCHEN_SERVICE_URL: http://kitchenservice:8083
+    ports:
+      - "8081:8081"
+    networks:
+      - keki-net
+
+  inventoryservice:
+    build:
+      context: ./inventoryservice
+    depends_on:
+      - inventoryservice-db
+    environment:
+      DB_HOST: inventoryservice-db
+      DB_PORT: 5432
+      DB_NAME: inventorydb
+      DB_USER: inventory_user
+      DB_PASSWORD: inventory_pass
+    ports:
+      - "8082:8082"
+    networks:
+      - keki-net
+
+  kitchenservice:
+    build:
+      context: ./kitchenservice
+    depends_on:
+      - kitchenservice-db
+    environment:
+      DB_HOST: kitchenservice-db
+      DB_PORT: 5432
+      DB_NAME: kitchendb
+      DB_USER: kitchen_user
+      DB_PASSWORD: kitchen_pass
+      ORDER_SERVICE_URL: http://orderservice:8081
+    ports:
+      - "8083:8083"
+    networks:
+      - keki-net
+
+networks:
+  keki-net:
+    driver: bridge
+
+

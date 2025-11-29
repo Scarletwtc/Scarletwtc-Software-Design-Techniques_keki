@@ -1,69 +1,190 @@
-# Software-Design-Techniques_keki
-# Smart Cake Shop Management System
+## Software-Design-Techniques_keki
+## Smart Cake Shop Management System
 
-# Team
+### Team
 
 - **El-Ghoul Layla** — GitHub [@scarletwtc](https://github.com/scarletwtc)  
 - **Mahmoud Mirghani Abdelrahman** — GitHub [@Abd210](https://github.com/Abd210)  
 - **Uritu Andra-Ioana** — GitHub [@andrauritu](https://github.com/andrauritu)
 
-# Project Description 
+---
 
-The **Smart Cake Shop Management System (SCMS)** is an application designed to streamline and digitalize the daily operations of **Keki**, a modern cake shop.  
+## Microservices Implementation (Orders, Inventory, Kitchen)
 
-The system allows **managers, chefs, and staff** to efficiently manage all aspects of the shop, including **menu items, ingredient inventory, and staff assignments**, while providing a seamless ordering experience for customers.  
+This repository now contains a **microservices-based backend** for Keki’s Smart Cake Shop focused on three core services only:
 
-With this Smart Cake Shop Management System:  
-- **Chefs** can view active orders and update the preparation status of cakes.  
-- **Staff** can manage order fulfillment and communicate with the chef or manager.  
-- **Managers** can oversee inventory levels, update the menu, and monitor daily sales and performance reports.  
+- **Order Service** (`orderservice`): handles creation and status of cake orders, applies the **Factory**, **Builder**, and **Observer** patterns for `Order` and `Cake`.
+- **Inventory Service** (`inventoryservice`): manages ingredient stock in its own database, inspired by the **Singleton** inventory manager but implemented as a dedicated microservice.
+- **Kitchen Service** (`kitchenservice`): tracks preparation and delivery of orders in the kitchen and pushes status changes back to the Order Service.
 
-**Keki’s Smart Cake Shop Management System aims to increase operational efficiency, reduce errors, and provide accurate tracking of inventory and orders, ensuring both staff and customers enjoy a smooth and organized experience.**
+Each service:
 
+- Runs as an independent **Spring Boot** application.
+- Owns its **own PostgreSQL database** (one DB per service).
+- Exposes a **REST API** and communicates with other services over HTTP.
+- Is packaged with a dedicated **Dockerfile** and wired together via `docker-compose.yml`.
+
+The original Java desktop prototype with design patterns remains in the `SmartCakeShop` folder for reference; the microservices implementation reuses those ideas in a distributed architecture.
 
 ---
 
-### Example Workflow  
+## How the Three Services Communicate
 
-1. A **customer** places an order (e.g., a chocolate birthday cake).  
-2. The **manager** reviews and confirms the order.  
-3. The **chef** receives an update and begins preparation.  
-4. The **inventory manager** automatically adjusts ingredient levels.  
-5. Once complete, **staff** handle delivery and mark the order as fulfilled.  
+- **Order → Inventory**: when a customer places a *standard cake* order, `orderservice` calls `inventoryservice` (`/api/inventory/check-and-reserve`) to **check and reserve** flour, sugar, eggs, etc.
+- **Order → Kitchen**: if inventory is sufficient, `orderservice` persists the new order (status = `IN_PROGRESS`) and calls `kitchenservice` (`/api/kitchen/orders`) to create a **kitchen order ticket**.
+- **Kitchen → Order**: when the **chef** or **staff** update a kitchen order (`READY` / `DELIVERED`), `kitchenservice` calls back into `orderservice` (`/api/orders/{id}/status`) so the main order status stays in sync.
+
+This flow implements the **“standard cake”** sequence from the diagrams in a microservices style:
+
+1. **Customer → Order Service**: place order for a standard cake.
+2. **Order Service → Inventory Service**: check stock and reserve ingredients.
+3. **Order Service → Kitchen Service**: create kitchen order; status becomes `IN_PROGRESS`.
+4. **Kitchen Service (Chef/Staff)**: update to `READY` then `DELIVERED`.
+5. **Kitchen Service → Order Service**: pushes status updates back, so observers (Chef/Staff) in `orderservice` are notified.
+
+Internally, `orderservice` keeps the **Observer pattern** (Chef + Staff observers attached to an `Order`) and uses a **CakeBuilder** and **OrderFactory** for creating cake orders, matching the original class diagram.
+
+---
+
+## Running Everything with Docker Compose
+
+### Prerequisites
+
+- **Docker** and **Docker Compose** installed.
+- No other services already listening on ports **8081, 8082, 8083** or **5433, 5434, 5435**.
+
+### Start the system
+
+From the repository root:
+
+```bash
+docker compose up --build
+```
+
+This will:
+
+- Build and start:
+  - `orderservice` on `http://localhost:8081`
+  - `inventoryservice` on `http://localhost:8082`
+  - `kitchenservice` on `http://localhost:8083`
+- Start three PostgreSQL databases:
+  - `orderservice-db` (exposed on host port `5433`)
+  - `inventoryservice-db` (exposed on `5434`)
+  - `kitchenservice-db` (exposed on `5435`)
+
+To stop everything:
+
+```bash
+docker compose down
+```
 
 ---
 
+## Main REST Endpoints
 
-### Core Features
-| **Role** | **Key Features** |
-|:----------:|:-----------------:|
-| **Customer** | Browse cakes, place orders,  rate experience |
-| **Chef** | View active orders, update baking progress |
-| **Staff** | Deliver ready orders, handle order fulfillment, communicate with chef/manager |
-| **Manager** | Manage cake menu, track inventory, assign staff tasks, view sales reports |
+### Order Service (`orderservice`, port 8081)
 
-**Scope:** Initially developed as a **Java desktop application**, later adaptable for **web or mobile use**. The system architecture encourages **scalability**, **code reuse**, and **maintainability** through the strategic application of software design patterns.  
+- **POST** `http://localhost:8081/api/orders`  
+  - **Description**: Create a new *standard cake* order.
+  - **Request body example**:
+    ```json
+    {
+      "customerName": "Alice",
+      "flavour": "CHOCOLATE",
+      "color": "BROWN",
+      "quantity": 1
+    }
+    ```
+  - **Behaviour**:
+    - Calls `inventoryservice` to check and reserve ingredients.
+    - On success: saves the order, sets status `IN_PROGRESS`, notifies Chef + Staff observers, and calls `kitchenservice` to create a kitchen order.
+    - On insufficient stock: returns **409 CONFLICT** with an error message.
+
+- **GET** `http://localhost:8081/api/orders`  
+  - **Description**: List all orders.
+
+- **GET** `http://localhost:8081/api/orders/{id}`  
+  - **Description**: Get a single order (including cake flavour/color, price, and status).
+
+- **PATCH** `http://localhost:8081/api/orders/{id}/status?status=READY`  
+  - **Description**: Manually update order status (used internally by `kitchenservice` for `READY` / `DELIVERED`, and can also be called from Postman for testing edge cases like `CANCELLED`).  
+  - **Accepted values**: `NEW`, `IN_PROGRESS`, `READY`, `DELIVERED`, `CANCELLED`.
+
+### Inventory Service (`inventoryservice`, port 8082)
+
+- **GET** `http://localhost:8082/api/inventory`  
+  - **Description**: List all ingredients and their quantities.
+
+- **POST** `http://localhost:8082/api/inventory`  
+  - **Description**: Create or update a single ingredient.  
+  - **Example body**:
+    ```json
+    {
+      "name": "Flour",
+      "quantity": 100
+    }
+    ```
+
+- **POST** `http://localhost:8082/api/inventory/check-and-reserve`  
+  - **Description**: Atomically check and reserve stock for a set of ingredients. Used by `orderservice`.
+  - **Example success request**:
+    ```json
+    {
+      "items": {
+        "Flour": 2,
+        "Sugar": 1,
+        "Egg": 3
+      }
+    }
+    ```
+  - **Response**:
+    - **200 OK** with `{ "success": true, "missingItems": {} }` if all ingredients are available and reserved.
+    - **409 CONFLICT** with `{ "success": false, "missingItems": { ... } }` detailing which ingredients are short.
+
+### Kitchen Service (`kitchenservice`, port 8083)
+
+- **POST** `http://localhost:8083/api/kitchen/orders`  
+  - **Description**: Create a new kitchen order (called by `orderservice` after order creation).
+  - **Example body**:
+    ```json
+    {
+      "orderId": 1,
+      "cakeName": "Standard cake"
+    }
+    ```
+  - **Behaviour**: Saves a kitchen order with status `IN_PROGRESS` and immediately notifies `orderservice` so the main order status is kept in sync.
+
+- **GET** `http://localhost:8083/api/kitchen/orders`  
+  - **Description**: List all kitchen orders (for **Chef**/**Staff** views).
+
+- **PATCH** `http://localhost:8083/api/kitchen/orders/{kitchenOrderId}/ready`  
+  - **Description**: Used by the **Chef** to mark a cake as ready. Updates local status to `READY` and pushes the change to `orderservice`.
+
+- **PATCH** `http://localhost:8083/api/kitchen/orders/{kitchenOrderId}/delivered`  
+  - **Description**: Used by **Staff** to mark a cake as delivered. Updates local status to `DELIVERED` and pushes the change to `orderservice`.
 
 ---
-## Design Patterns
 
-The **Smart Cake Shop Management System** leverages multiple design patterns to ensure **clean, maintainable, and reusable code**. These patterns follow the principles taught in the course, and are applied to core aspects of the system: menu management, inventory tracking, staff coordination, and order processing.
+## Postman Collection
 
+A complete Postman collection is provided at:
 
-| **Pattern** | **Type** | **Justification** |
-|-------------|---------|--------------------------------|
-| **Singleton** | Creational | Used for the **InventoryManager** to ensure there’s only one global source of truth for ingredient data. This prevents conflicts between concurrent operations (e.g., multiple chefs accessing stock simultaneously). Unlike using static variables, Singleton allows controlled access, lazy initialization, and future extension if database connections are introduced. |
-| **Factory Method** | Creational | Handles the creation of **Order** objects (custom cakes, standard cakes, drinks) without exposing instantiation details. Compared to simple constructors, the Factory Method centralizes creation logic, making it easier to introduce new order types (like gift boxes or catering orders) without altering existing code, following the **Open/Closed Principle**. |
-| **Builder** | Creational |  Used for constructing complex **MenuItem** or **Cake** objects that can vary in ingredients, size, and decoration. Instead of cluttering constructors with multiple optional parameters, Builder allows step-by-step configuration, making code more readable, flexible, and reusable across different cake combinations. |
-| **Observer** | Behavioral | Keeps **Chef** and **Staff** modules in sync with **Order** status updates. When a manager or chef updates an order, all subscribed observers (e.g., staff) are notified automatically. This pattern ensures real-time updates and eliminates unnecessary coupling between components. |
-| **Strategy** | Behavioral |Lets the **Manager** switch between different pricing or discount algorithms dynamically (e.g., holiday discounts, loyalty points). Instead of embedding multiple conditional statements, Strategy encapsulates each pricing method in its own class. |
-| **Proxy** | Structural | Acts as a security layer between the user interface and **Manager** functionalities like financial reports or employee data. The Proxy pattern ensures only authorized roles can access sensitive operations, promoting encapsulation and security over using direct object references. |
-| **Delegation** | Structural | The Manager gives order validation and inventory checking to separate classes. This keeps each class focused on one job and avoids repeating code. |
+- **`SmartCakeShop-microservices.postman_collection.json`**
 
-**Why these patterns:** 
-1. **Simplify object creation** : Singleton, Factory Method, Builder 
-2. **Decouple modules and improve maintainability** : Observer, Strategy, Proxy
-3. **Support future extension** without modifying existing code : OCP, flexible pattern use 
-4. **Increase code reuse and clarity** : delegation where necessary
+It contains requests for:
 
-In summary, the Smart Cake Shop Management System applies a combination of creational, behavioral, and structural design patterns to create a scalable architecture. These patterns work together to promote flexibility, reduce redundancy, and make the system adaptable for future extensions, such as integrating online orders or multi-branch management.
+- Seeding and listing inventory.
+- Checking and reserving ingredients (success and insufficient stock edge cases).
+- Creating orders (happy path and failure when inventory is not enough).
+- Listing and retrieving orders.
+- Manually changing order status.
+- Listing kitchen orders and driving them through `READY` and `DELIVERED` states (Chef/Staff actions), verifying that order status is updated via inter-service calls.
+
+You can import this file into Postman and run the requests directly against the services started with Docker Compose.
+
+---
+
+## Notes
+
+- Only the **three required services** are implemented in the microservices layer: `orderservice`, `inventoryservice`, and `kitchenservice`. There is **no** notification, reporting, or auth microservice in this implementation, as requested.
+- The legacy `SmartCakeShop` folder shows the original monolithic Java design patterns (Factory, Builder, Observer, Singleton); the new microservices reuse the same ideas while adding **service boundaries**, **separate databases**, and **Docker-based deployment**.
