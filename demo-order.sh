@@ -1,39 +1,37 @@
 #!/usr/bin/env bash
 
-# Demo script: run one complete happy-path order through all three microservices.
+# Demo script: run one complete happy-path order through all three microservices
+# via the API Gateway.
 # Prerequisites:
 # - docker compose up --build is already running from the project root
-# - Services listening on:
-#     orderservice:      http://localhost:8081
-#     inventoryservice:  http://localhost:8082
-#     kitchenservice:    http://localhost:8083
+# - Gateway listening on: http://localhost:8080
 
 set -e
 
-echo "=== Step 1: Seeding inventory in inventoryservice ==="
+echo "=== Step 1: Seeding inventory via API Gateway ==="
 
 # Add Flour
-curl -s -X POST http://localhost:8082/api/inventory \
+curl -s -X POST http://localhost:8080/api/inventory \
   -H "Content-Type: application/json" \
   -d '{"name":"Flour","quantity":10}' >/dev/null
 
 # Add Sugar
-curl -s -X POST http://localhost:8082/api/inventory \
+curl -s -X POST http://localhost:8080/api/inventory \
   -H "Content-Type: application/json" \
   -d '{"name":"Sugar","quantity":10}' >/dev/null
 
 # Add Egg
-curl -s -X POST http://localhost:8082/api/inventory \
+curl -s -X POST http://localhost:8080/api/inventory \
   -H "Content-Type: application/json" \
   -d '{"name":"Egg","quantity":30}' >/dev/null
 
 echo "Inventory seeded (Flour, Sugar, Egg)."
 
 echo
-echo "=== Step 2: Creating a new order in orderservice ==="
+echo "=== Step 2: Creating a new order via API Gateway ==="
 
 # Create a standard chocolate cake order for Alice
-CREATE_RESPONSE=$(curl -s -X POST http://localhost:8081/api/orders \
+CREATE_RESPONSE=$(curl -s -X POST http://localhost:8080/api/orders \
   -H "Content-Type: application/json" \
   -d '{
     "customerName":"Alice",
@@ -61,8 +59,8 @@ echo "=== Step 3: Waiting for kitchenservice to create the kitchen order ==="
 # Give the system a moment to propagate and persist
 sleep 2
 
-echo "Fetching kitchen orders from kitchenservice..."
-KITCHEN_LIST=$(curl -s http://localhost:8083/api/kitchen/orders)
+echo "Fetching kitchen orders via API Gateway..."
+KITCHEN_LIST=$(curl -s http://localhost:8080/api/kitchen/orders)
 echo "Raw kitchen orders list:"
 echo "$KITCHEN_LIST"
 
@@ -77,21 +75,21 @@ fi
 echo "Parsed kitchen order id: $KITCHEN_ORDER_ID"
 
 echo
-echo "=== Step 4: Chef marks the kitchen order as READY ==="
+echo "=== Step 4: Chef marks the kitchen order as READY via API Gateway ==="
 
-curl -s -X PATCH "http://localhost:8083/api/kitchen/orders/${KITCHEN_ORDER_ID}/ready" >/dev/null
+curl -s -X PATCH "http://localhost:8080/api/kitchen/orders/${KITCHEN_ORDER_ID}/ready" >/dev/null
 echo "Kitchen order $KITCHEN_ORDER_ID marked READY."
 
 echo
-echo "=== Step 5: Staff marks the kitchen order as DELIVERED ==="
+echo "=== Step 5: Staff marks the kitchen order as DELIVERED via API Gateway ==="
 
-curl -s -X PATCH "http://localhost:8083/api/kitchen/orders/${KITCHEN_ORDER_ID}/delivered" >/dev/null
+curl -s -X PATCH "http://localhost:8080/api/kitchen/orders/${KITCHEN_ORDER_ID}/delivered" >/dev/null
 echo "Kitchen order $KITCHEN_ORDER_ID marked DELIVERED."
 
 echo
-echo "=== Step 6: Fetch final order state from orderservice ==="
+echo "=== Step 6: Fetch final order state via API Gateway ==="
 
-FINAL_ORDER=$(curl -s "http://localhost:8081/api/orders/${ORDER_ID}")
+FINAL_ORDER=$(curl -s "http://localhost:8080/api/orders/${ORDER_ID}")
 echo "Final order JSON:"
 echo "$FINAL_ORDER"
 

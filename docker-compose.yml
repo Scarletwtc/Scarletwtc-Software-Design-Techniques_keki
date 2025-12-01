@@ -86,6 +86,18 @@ services:
     networks:
       - keki-net
 
+  apigateway:
+    build:
+      context: ./apigateway
+    depends_on:
+      - orderservice
+      - inventoryservice
+      - kitchenservice
+    ports:
+      - "8080:8080"
+    networks:
+      - keki-net
+
 networks:
   keki-net:
     driver: bridge

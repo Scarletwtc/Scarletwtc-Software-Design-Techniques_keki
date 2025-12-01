@@ -21,10 +21,10 @@
           "raw": "{\n  \"name\": \"Flour\",\n  \"quantity\": 100\n}"
         },
         "url": {
-          "raw": "http://localhost:8082/api/inventory",
+          "raw": "http://localhost:8080/api/inventory",
           "protocol": "http",
           "host": ["localhost"],
-          "port": "8082",
+          "port": "8080",
           "path": ["api", "inventory"]
         }
       }
@@ -34,10 +34,10 @@
       "request": {
         "method": "GET",
         "url": {
-          "raw": "http://localhost:8082/api/inventory",
+          "raw": "http://localhost:8080/api/inventory",
           "protocol": "http",
           "host": ["localhost"],
-          "port": "8082",
+          "port": "8080",
           "path": ["api", "inventory"]
         }
       }
@@ -57,10 +57,10 @@
           "raw": "{\n  \"items\": {\n    \"Flour\": 2,\n    \"Sugar\": 1,\n    \"Egg\": 3\n  }\n}"
         },
         "url": {
-          "raw": "http://localhost:8082/api/inventory/check-and-reserve",
+          "raw": "http://localhost:8080/api/inventory/check-and-reserve",
           "protocol": "http",
           "host": ["localhost"],
-          "port": "8082",
+          "port": "8080",
           "path": ["api", "inventory", "check-and-reserve"]
         }
       }
@@ -80,10 +80,10 @@
           "raw": "{\n  \"items\": {\n    \"Flour\": 10000\n  }\n}"
         },
         "url": {
-          "raw": "http://localhost:8082/api/inventory/check-and-reserve",
+          "raw": "http://localhost:8080/api/inventory/check-and-reserve",
           "protocol": "http",
           "host": ["localhost"],
-          "port": "8082",
+          "port": "8080",
           "path": ["api", "inventory", "check-and-reserve"]
         }
       }
@@ -103,10 +103,10 @@
           "raw": "{\n  \"customerName\": \"Alice\",\n  \"flavour\": \"CHOCOLATE\",\n  \"color\": \"BROWN\",\n  \"quantity\": 1\n}"
         },
         "url": {
-          "raw": "http://localhost:8081/api/orders",
+          "raw": "http://localhost:8080/api/orders",
           "protocol": "http",
           "host": ["localhost"],
-          "port": "8081",
+          "port": "8080",
           "path": ["api", "orders"]
         }
       }
@@ -126,10 +126,10 @@
           "raw": "{\n  \"customerName\": \"Bob\",\n  \"flavour\": \"VANILLA\",\n  \"color\": \"WHITE\",\n  \"quantity\": 9999\n}"
         },
         "url": {
-          "raw": "http://localhost:8081/api/orders",
+          "raw": "http://localhost:8080/api/orders",
           "protocol": "http",
           "host": ["localhost"],
-          "port": "8081",
+          "port": "8080",
           "path": ["api", "orders"]
         }
       }
@@ -139,10 +139,10 @@
       "request": {
         "method": "GET",
         "url": {
-          "raw": "http://localhost:8081/api/orders",
+          "raw": "http://localhost:8080/api/orders",
           "protocol": "http",
           "host": ["localhost"],
-          "port": "8081",
+          "port": "8080",
           "path": ["api", "orders"]
         }
       }
@@ -152,10 +152,10 @@
       "request": {
         "method": "GET",
         "url": {
-          "raw": "http://localhost:8081/api/orders/{{orderId}}",
+          "raw": "http://localhost:8080/api/orders/{{orderId}}",
           "protocol": "http",
           "host": ["localhost"],
-          "port": "8081",
+          "port": "8080",
           "path": ["api", "orders", "{{orderId}}"]
         }
       }
@@ -165,10 +165,10 @@
       "request": {
         "method": "PATCH",
         "url": {
-          "raw": "http://localhost:8081/api/orders/{{orderId}}/status?status=CANCELLED",
+          "raw": "http://localhost:8080/api/orders/{{orderId}}/status?status=CANCELLED",
           "protocol": "http",
           "host": ["localhost"],
-          "port": "8081",
+          "port": "8080",
           "path": ["api", "orders", "{{orderId}}", "status"],
           "query": [
             {
@@ -184,10 +184,10 @@
       "request": {
         "method": "GET",
         "url": {
-          "raw": "http://localhost:8083/api/kitchen/orders",
+          "raw": "http://localhost:8080/api/kitchen/orders",
           "protocol": "http",
           "host": ["localhost"],
-          "port": "8083",
+          "port": "8080",
           "path": ["api", "kitchen", "orders"]
         }
       }
@@ -197,10 +197,10 @@
       "request": {
         "method": "PATCH",
         "url": {
-          "raw": "http://localhost:8083/api/kitchen/orders/{{kitchenOrderId}}/ready",
+          "raw": "http://localhost:8080/api/kitchen/orders/{{kitchenOrderId}}/ready",
           "protocol": "http",
           "host": ["localhost"],
-          "port": "8083",
+          "port": "8080",
           "path": ["api", "kitchen", "orders", "{{kitchenOrderId}}", "ready"]
         }
       }
@@ -210,10 +210,10 @@
       "request": {
         "method": "PATCH",
         "url": {
-          "raw": "http://localhost:8083/api/kitchen/orders/{{kitchenOrderId}}/delivered",
+          "raw": "http://localhost:8080/api/kitchen/orders/{{kitchenOrderId}}/delivered",
           "protocol": "http",
           "host": ["localhost"],
-          "port": "8083",
+          "port": "8080",
           "path": ["api", "kitchen", "orders", "{{kitchenOrderId}}", "delivered"]
         }
       }

@@ -64,6 +64,7 @@ docker compose up --build
 This will:
 
 - Build and start:
+  - `apigateway` on `http://localhost:8080` (single entry point for clients)
   - `orderservice` on `http://localhost:8081`
   - `inventoryservice` on `http://localhost:8082`
   - `kitchenservice` on `http://localhost:8083`
@@ -82,9 +83,9 @@ docker compose down
 
 ## Main REST Endpoints
 
-### Order Service (`orderservice`, port 8081)
+### Order Service (via API Gateway, port 8080)
 
-- **POST** `http://localhost:8081/api/orders`  
+- **POST** `http://localhost:8080/api/orders`  
   - **Description**: Create a new *standard cake* order.
   - **Request body example**:
     ```json
@@ -100,22 +101,22 @@ docker compose down
     - On success: saves the order, sets status `IN_PROGRESS`, notifies Chef + Staff observers, and calls `kitchenservice` to create a kitchen order.
     - On insufficient stock: returns **409 CONFLICT** with an error message.
 
-- **GET** `http://localhost:8081/api/orders`  
+- **GET** `http://localhost:8080/api/orders`  
   - **Description**: List all orders.
 
-- **GET** `http://localhost:8081/api/orders/{id}`  
+- **GET** `http://localhost:8080/api/orders/{id}`  
   - **Description**: Get a single order (including cake flavour/color, price, and status).
 
-- **PATCH** `http://localhost:8081/api/orders/{id}/status?status=READY`  
+- **PATCH** `http://localhost:8080/api/orders/{id}/status?status=READY`  
   - **Description**: Manually update order status (used internally by `kitchenservice` for `READY` / `DELIVERED`, and can also be called from Postman for testing edge cases like `CANCELLED`).  
   - **Accepted values**: `NEW`, `IN_PROGRESS`, `READY`, `DELIVERED`, `CANCELLED`.
 
-### Inventory Service (`inventoryservice`, port 8082)
+### Inventory Service (via API Gateway, port 8080)
 
-- **GET** `http://localhost:8082/api/inventory`  
+- **GET** `http://localhost:8080/api/inventory`  
   - **Description**: List all ingredients and their quantities.
 
-- **POST** `http://localhost:8082/api/inventory`  
+- **POST** `http://localhost:8080/api/inventory`  
   - **Description**: Create or update a single ingredient.  
   - **Example body**:
     ```json
@@ -125,7 +126,7 @@ docker compose down
     }
     ```
 
-- **POST** `http://localhost:8082/api/inventory/check-and-reserve`  
+- **POST** `http://localhost:8080/api/inventory/check-and-reserve`  
   - **Description**: Atomically check and reserve stock for a set of ingredients. Used by `orderservice`.
   - **Example success request**:
     ```json
@@ -141,9 +142,9 @@ docker compose down
     - **200 OK** with `{ "success": true, "missingItems": {} }` if all ingredients are available and reserved.
     - **409 CONFLICT** with `{ "success": false, "missingItems": { ... } }` detailing which ingredients are short.
 
-### Kitchen Service (`kitchenservice`, port 8083)
+### Kitchen Service (via API Gateway, port 8080)
 
-- **POST** `http://localhost:8083/api/kitchen/orders`  
+- **POST** `http://localhost:8080/api/kitchen/orders`  
   - **Description**: Create a new kitchen order (called by `orderservice` after order creation).
   - **Example body**:
     ```json
@@ -154,13 +155,13 @@ docker compose down
     ```
   - **Behaviour**: Saves a kitchen order with status `IN_PROGRESS` and immediately notifies `orderservice` so the main order status is kept in sync.
 
-- **GET** `http://localhost:8083/api/kitchen/orders`  
+- **GET** `http://localhost:8080/api/kitchen/orders`  
   - **Description**: List all kitchen orders (for **Chef**/**Staff** views).
 
-- **PATCH** `http://localhost:8083/api/kitchen/orders/{kitchenOrderId}/ready`  
+- **PATCH** `http://localhost:8080/api/kitchen/orders/{kitchenOrderId}/ready`  
   - **Description**: Used by the **Chef** to mark a cake as ready. Updates local status to `READY` and pushes the change to `orderservice`.
 
-- **PATCH** `http://localhost:8083/api/kitchen/orders/{kitchenOrderId}/delivered`  
+- **PATCH** `http://localhost:8080/api/kitchen/orders/{kitchenOrderId}/delivered`  
   - **Description**: Used by **Staff** to mark a cake as delivered. Updates local status to `DELIVERED` and pushes the change to `orderservice`.
 
 ---
