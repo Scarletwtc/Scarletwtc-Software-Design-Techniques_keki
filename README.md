@@ -81,109 +81,40 @@ docker compose down
 
 ---
 
-## Main REST Endpoints
-
-### Order Service (via API Gateway, port 8080)
-
-- **POST** `http://localhost:8080/api/orders`  
-  - **Description**: Create a new *standard cake* order.
-  - **Request body example**:
-    ```json
-    {
-      "customerName": "Alice",
-      "flavour": "CHOCOLATE",
-      "color": "BROWN",
-      "quantity": 1
-    }
-    ```
-  - **Behaviour**:
-    - Calls `inventoryservice` to check and reserve ingredients.
-    - On success: saves the order, sets status `IN_PROGRESS`, notifies Chef + Staff observers, and calls `kitchenservice` to create a kitchen order.
-    - On insufficient stock: returns **409 CONFLICT** with an error message.
-
-- **GET** `http://localhost:8080/api/orders`  
-  - **Description**: List all orders.
-
-- **GET** `http://localhost:8080/api/orders/{id}`  
-  - **Description**: Get a single order (including cake flavour/color, price, and status).
-
-- **PATCH** `http://localhost:8080/api/orders/{id}/status?status=READY`  
-  - **Description**: Manually update order status (used internally by `kitchenservice` for `READY` / `DELIVERED`, and can also be called from Postman for testing edge cases like `CANCELLED`).  
-  - **Accepted values**: `NEW`, `IN_PROGRESS`, `READY`, `DELIVERED`, `CANCELLED`.
-
-### Inventory Service (via API Gateway, port 8080)
-
-- **GET** `http://localhost:8080/api/inventory`  
-  - **Description**: List all ingredients and their quantities.
-
-- **POST** `http://localhost:8080/api/inventory`  
-  - **Description**: Create or update a single ingredient.  
-  - **Example body**:
-    ```json
-    {
-      "name": "Flour",
-      "quantity": 100
-    }
-    ```
-
-- **POST** `http://localhost:8080/api/inventory/check-and-reserve`  
-  - **Description**: Atomically check and reserve stock for a set of ingredients. Used by `orderservice`.
-  - **Example success request**:
-    ```json
-    {
-      "items": {
-        "Flour": 2,
-        "Sugar": 1,
-        "Egg": 3
-      }
-    }
-    ```
-  - **Response**:
-    - **200 OK** with `{ "success": true, "missingItems": {} }` if all ingredients are available and reserved.
-    - **409 CONFLICT** with `{ "success": false, "missingItems": { ... } }` detailing which ingredients are short.
-
-### Kitchen Service (via API Gateway, port 8080)
-
-- **POST** `http://localhost:8080/api/kitchen/orders`  
-  - **Description**: Create a new kitchen order (called by `orderservice` after order creation).
-  - **Example body**:
-    ```json
-    {
-      "orderId": 1,
-      "cakeName": "Standard cake"
-    }
-    ```
-  - **Behaviour**: Saves a kitchen order with status `IN_PROGRESS` and immediately notifies `orderservice` so the main order status is kept in sync.
-
-- **GET** `http://localhost:8080/api/kitchen/orders`  
-  - **Description**: List all kitchen orders (for **Chef**/**Staff** views).
-
-- **PATCH** `http://localhost:8080/api/kitchen/orders/{kitchenOrderId}/ready`  
-  - **Description**: Used by the **Chef** to mark a cake as ready. Updates local status to `READY` and pushes the change to `orderservice`.
-
-- **PATCH** `http://localhost:8080/api/kitchen/orders/{kitchenOrderId}/delivered`  
-  - **Description**: Used by **Staff** to mark a cake as delivered. Updates local status to `DELIVERED` and pushes the change to `orderservice`.
-
----
-
 ## Postman Collection
 
 A complete Postman collection is provided at:
-
-- **`SmartCakeShop-microservices.postman_collection.json`**
+- `change_the_name_of_the_collection.postman_collection.json` (repo root)
 
 It contains requests for:
-
-- Seeding and listing inventory.
-- Checking and reserving ingredients (success and insufficient stock edge cases).
-- Creating orders (happy path and failure when inventory is not enough).
-- Listing and retrieving orders.
-- Manually changing order status.
-- Listing kitchen orders and driving them through `READY` and `DELIVERED` states (Chef/Staff actions), verifying that order status is updated via inter-service calls.
+- Inventory: list all ingredients, seed/update single ingredient, check & reserve ingredients.
+- Orders: create standard cake order, list all orders, get order by id.
+- Kitchen: create kitchen order, list all kitchen orders, mark orders as `READY` and `DELIVERED`.
 
 You can import this file into Postman and run the requests directly against the services started with Docker Compose.
 
----
+
+### How to Import the Postman Collection
+
+- Open Postman.
+- Click `Import` → choose `File`.
+- Select `change_the_name_of_the_collection.postman_collection.json` from the repo root.
+- Click `Import`.
+- Ensure Docker services are running:
+  - `orderservice`: `http://localhost:8081`
+  - `inventoryservice`: `http://localhost:8082`
+  - `kitchenservice`: `http://localhost:8083`
+- Recommended order to run:
+  - Inventory: seed/list, then check-and-reserve.
+  - Orders: create/list/detail; also test insufficient stock edge case.
+  - Kitchen: create ticket, set `READY` then `DELIVERED`; confirm `orderservice` status updates.
+
+Optional Postman environment:
+- Add variables for convenience:
+  - `order_base` = `http://localhost:8081`
+  - `inventory_base` = `http://localhost:8082`
+  - `kitchen_base` = `http://localhost:8083`
+- Use `{{order_base}}`, `{{inventory_base}}`, `{{kitchen_base}}` in request URLs.
 
 ## Notes
 
