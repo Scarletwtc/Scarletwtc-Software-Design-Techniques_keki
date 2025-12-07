@@ -1,14 +1,15 @@
 package com.keki.orderservice.service;
 
-import com.keki.orderservice.client.KitchenClient;
 import com.keki.orderservice.config.RabbitConfig;
 import com.keki.orderservice.dto.InventoryResultEvent;
+import com.keki.orderservice.dto.OrderConfirmedEvent;
 import com.keki.orderservice.model.Order;
 import com.keki.orderservice.model.OrderStatus;
 import com.keki.orderservice.repository.OrderRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,11 +19,11 @@ public class OrderInventoryEventHandler {
     private static final Logger logger = LoggerFactory.getLogger(OrderInventoryEventHandler.class);
 
     private final OrderRepository orderRepository;
-    private final KitchenClient kitchenClient;
+    private final RabbitTemplate rabbitTemplate;
 
-    public OrderInventoryEventHandler(OrderRepository orderRepository, KitchenClient kitchenClient) {
+    public OrderInventoryEventHandler(OrderRepository orderRepository, RabbitTemplate rabbitTemplate) {
         this.orderRepository = orderRepository;
-        this.kitchenClient = kitchenClient;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     @RabbitListener(queues = RabbitConfig.QUEUE_INVENTORY_RESULT)
@@ -38,13 +39,19 @@ public class OrderInventoryEventHandler {
             order.updateStatus(OrderStatus.CONFIRMED);
             order = orderRepository.save(order);
             
-            // Now send to kitchen (HTTP call as before)
-            Long kitchenOrderId = kitchenClient.createKitchenOrder(order.getId(), order.getCake().getName());
-            order.setKitchenOrderId(kitchenOrderId);
-            order.updateStatus(OrderStatus.IN_PROGRESS);
-            orderRepository.save(order);
+            // Publish order.confirmed event to RabbitMQ for KitchenService
+            OrderConfirmedEvent confirmedEvent = new OrderConfirmedEvent(
+                    order.getId(),
+                    order.getCake().getName()
+            );
             
-            logger.info("Order {} confirmed and sent to kitchen", order.getId());
+            rabbitTemplate.convertAndSend(
+                    RabbitConfig.EXCHANGE_NAME,
+                    "order.confirmed",
+                    confirmedEvent
+            );
+            
+            logger.info("Order {} confirmed and published to kitchen queue", order.getId());
         } else {
             order.updateStatus(OrderStatus.REJECTED);
             orderRepository.save(order);

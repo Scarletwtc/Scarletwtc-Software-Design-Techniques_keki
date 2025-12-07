@@ -93,36 +93,6 @@
 			"response": []
 		},
 		{
-			"name": " Check & reserve ingredients",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n  \"items\": {\r\n    \"Flour\": 2,\r\n    \"Sugar\": 1,\r\n    \"Egg\": 3\r\n  }\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:8080/api/inventory/check-and-reserve",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"api",
-						"inventory",
-						"check-and-reserve"
-					]
-				}
-			},
-			"response": []
-		},
-		{
 			"name": "Create order (async with RabbitMQ)",
 			"request": {
 				"method": "POST",
@@ -187,36 +157,6 @@
 						"api",
 						"orders",
 						"1"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "(Normally internal) Create kitchen order",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n  \"orderId\": 2,\r\n  \"cakeName\": \"Standard cake\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:8083/api/kitchen/orders",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8083",
-					"path": [
-						"api",
-						"kitchen",
-						"orders"
 					]
 				}
 			},

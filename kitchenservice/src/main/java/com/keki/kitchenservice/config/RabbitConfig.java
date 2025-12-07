@@ -1,4 +1,4 @@
-package com.keki.orderservice.config;
+package com.keki.kitchenservice.config;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -10,9 +10,6 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitConfig {
 
     public static final String EXCHANGE_NAME = "keki.exchange";
-
-    public static final String QUEUE_ORDER_PLACED = "inventory.order-placed";
-    public static final String QUEUE_INVENTORY_RESULT = "order.inventory-result";
     public static final String QUEUE_ORDER_CONFIRMED = "kitchen.order-confirmed";
 
     @Bean
@@ -21,32 +18,8 @@ public class RabbitConfig {
     }
 
     @Bean
-    public Queue inventoryOrderPlacedQueue() {
-        return new Queue(QUEUE_ORDER_PLACED, true);
-    }
-
-    @Bean
-    public Queue orderInventoryResultQueue() {
-        return new Queue(QUEUE_INVENTORY_RESULT, true);
-    }
-
-    @Bean
     public Queue kitchenOrderConfirmedQueue() {
         return new Queue(QUEUE_ORDER_CONFIRMED, true);
-    }
-
-    @Bean
-    public Binding bindOrderPlaced(Queue inventoryOrderPlacedQueue, TopicExchange kekiExchange) {
-        return BindingBuilder.bind(inventoryOrderPlacedQueue)
-                .to(kekiExchange)
-                .with("order.placed");
-    }
-
-    @Bean
-    public Binding bindInventoryResult(Queue orderInventoryResultQueue, TopicExchange kekiExchange) {
-        return BindingBuilder.bind(orderInventoryResultQueue)
-                .to(kekiExchange)
-                .with("inventory.result");
     }
 
     @Bean

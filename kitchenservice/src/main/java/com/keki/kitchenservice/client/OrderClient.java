@@ -38,6 +38,16 @@ public class OrderClient {
                     mappedStatus, orderId, e.getMessage());
         }
     }
+
+    public void updateKitchenOrderId(Long orderId, Long kitchenOrderId) {
+        String url = orderServiceUrl + "/api/orders/" + orderId + "/kitchen-order?kitchenOrderId=" + kitchenOrderId;
+        try {
+            restTemplate.postForObject(url, null, Void.class);
+            logger.info("Updated kitchen order ID {} for order {}", kitchenOrderId, orderId);
+        } catch (Exception e) {
+            logger.warn("Failed to update kitchen order ID for order {}: {}", orderId, e.getMessage());
+        }
+    }
 }
 
 

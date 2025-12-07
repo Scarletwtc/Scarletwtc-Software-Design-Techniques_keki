@@ -90,6 +90,14 @@ public class OrderService {
         orderRepository.save(order);
     }
 
+    @Transactional
+    public void updateKitchenOrderId(Long id, Long kitchenOrderId) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + id));
+        order.setKitchenOrderId(kitchenOrderId);
+        orderRepository.save(order);
+    }
+
     private OrderResponse toResponse(Order order) {
         OrderResponse response = new OrderResponse();
         response.setId(order.getId());

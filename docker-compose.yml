@@ -88,6 +88,7 @@ services:
       context: ./kitchenservice
     depends_on:
       - kitchenservice-db
+      - rabbitmq
     environment:
       DB_HOST: kitchenservice-db
       DB_PORT: 5432
@@ -95,6 +96,7 @@ services:
       DB_USER: kitchen_user
       DB_PASSWORD: kitchen_pass
       ORDER_SERVICE_URL: http://orderservice:8081
+      RABBITMQ_HOST: rabbitmq
     ports:
       - "8083:8083"
     networks:

@@ -57,6 +57,13 @@ public class OrderController {
         orderService.updateStatus(id, status);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{id}/kitchen-order")
+    public ResponseEntity<Void> updateKitchenOrderId(@PathVariable Long id,
+                                                     @RequestParam("kitchenOrderId") Long kitchenOrderId) {
+        orderService.updateKitchenOrderId(id, kitchenOrderId);
+        return ResponseEntity.noContent().build();
+    }
 }
 
 
