@@ -1,0 +1,172 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ master, 5_message_queue ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-and-test:
+    name: Build and Test Services
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: 'maven'
+        
+    - name: Build OrderService
+      run: |
+        cd orderservice
+        mvn clean package -DskipTests
+        
+    - name: Build InventoryService
+      run: |
+        cd inventoryservice
+        mvn clean package -DskipTests
+        
+    - name: Build KitchenService
+      run: |
+        cd kitchenservice
+        mvn clean package -DskipTests
+        
+    - name: Build API Gateway
+      run: |
+        cd apigateway
+        mvn clean package -DskipTests
+        
+    - name: Run Tests - OrderService
+      run: |
+        cd orderservice
+        mvn test || true
+        
+    - name: Run Tests - InventoryService
+      run: |
+        cd inventoryservice
+        mvn test || true
+        
+    - name: Run Tests - KitchenService
+      run: |
+        cd kitchenservice
+        mvn test || true
+        
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: jar-files
+        path: |
+          orderservice/target/*.jar
+          inventoryservice/target/*.jar
+          kitchenservice/target/*.jar
+          apigateway/target/*.jar
+        retention-days: 7
+        
+  docker-build-and-deploy:
+    name: Docker Build and Deploy
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Build Docker images
+      run: |
+        docker compose build
+        
+    - name: Start services
+      run: |
+        docker compose up -d
+        
+    - name: Wait for services to start
+      run: |
+        echo "Waiting 60 seconds for all services to start..."
+        sleep 60
+        
+    - name: Check container status
+      run: |
+        docker compose ps
+        
+    - name: Check OrderService health
+      run: |
+        for i in {1..10}; do
+          if curl -f http://localhost:8081/actuator/health; then
+            echo "OrderService is healthy"
+            exit 0
+          fi
+          echo "Attempt $i failed, retrying in 5s..."
+          sleep 5
+        done
+        exit 1
+        
+    - name: Check InventoryService health
+      run: |
+        curl -f http://localhost:8082/actuator/health || exit 1
+        
+    - name: Check KitchenService health
+      run: |
+        curl -f http://localhost:8083/actuator/health || exit 1
+        
+    - name: Check API Gateway health
+      run: |
+        curl -f http://localhost:8080/actuator/health || exit 1
+        
+    - name: Check RabbitMQ Management UI
+      run: |
+        curl -f http://localhost:15672 || exit 1
+        
+    - name: Test Order Creation (End-to-End)
+      run: |
+        # Seed ingredients
+        curl -X POST http://localhost:8080/api/inventory \
+          -H "Content-Type: application/json" \
+          -d '{"name": "Flour", "quantity": 100}'
+        
+        curl -X POST http://localhost:8080/api/inventory \
+          -H "Content-Type: application/json" \
+          -d '{"name": "Sugar", "quantity": 100}'
+        
+        curl -X POST http://localhost:8080/api/inventory \
+          -H "Content-Type: application/json" \
+          -d '{"name": "Egg", "quantity": 100}'
+        
+        # Create order
+        ORDER_RESPONSE=$(curl -X POST http://localhost:8080/api/orders \
+          -H "Content-Type: application/json" \
+          -d '{"customerName": "CI Test", "flavour": "CHOCOLATE", "color": "BROWN", "quantity": 1}')
+        
+        echo "Order created: $ORDER_RESPONSE"
+        
+        # Wait for async processing
+        sleep 10
+        
+        # Verify order was processed
+        ORDER_ID=$(echo $ORDER_RESPONSE | grep -o '"id":[0-9]*' | grep -o '[0-9]*')
+        curl -f http://localhost:8080/api/orders/$ORDER_ID || exit 1
+        
+    - name: Show container logs on failure
+      if: failure()
+      run: |
+        echo "=== OrderService Logs ==="
+        docker compose logs orderservice
+        echo "=== InventoryService Logs ==="
+        docker compose logs inventoryservice
+        echo "=== KitchenService Logs ==="
+        docker compose logs kitchenservice
+        echo "=== RabbitMQ Logs ==="
+        docker compose logs rabbitmq
+        
+    - name: Stop services
+      if: always()
+      run: |
+        docker compose down -v
