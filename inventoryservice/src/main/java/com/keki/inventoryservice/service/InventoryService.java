@@ -28,6 +28,14 @@ public class InventoryService {
         return ingredientRepository.save(ingredient);
     }
 
+    public Ingredient update(Long id, Ingredient ingredient) {
+        Ingredient existing = ingredientRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ingredient not found"));
+        existing.setName(ingredient.getName());
+        existing.setQuantity(ingredient.getQuantity());
+        return ingredientRepository.save(existing);
+    }
+
     @Transactional
     public CheckAndReserveResponse checkAndReserve(CheckAndReserveRequest request) {
         Map<String, Integer> missing = new HashMap<>();
@@ -61,6 +69,31 @@ public class InventoryService {
 
         return new CheckAndReserveResponse(true, Map.of());
     }
-}
 
+    @Transactional
+    public boolean checkAndReserve(Map<String, Integer> items) {
+        // Check if all items have sufficient stock
+        for (Map.Entry<String, Integer> entry : items.entrySet()) {
+            String name = entry.getKey();
+            int requestedQty = entry.getValue();
+
+            Ingredient ingredient = ingredientRepository.findByName(name).orElse(null);
+
+            if (ingredient == null || ingredient.getQuantity() < requestedQty) {
+                return false; // Insufficient stock
+            }
+        }
+
+        // Reserve (decrement) all items
+        for (Map.Entry<String, Integer> entry : items.entrySet()) {
+            String name = entry.getKey();
+            int requestedQty = entry.getValue();
+            Ingredient ingredient = ingredientRepository.findByName(name).orElseThrow();
+            ingredient.setQuantity(ingredient.getQuantity() - requestedQty);
+            ingredientRepository.save(ingredient);
+        }
+
+        return true;
+    }
+}
 

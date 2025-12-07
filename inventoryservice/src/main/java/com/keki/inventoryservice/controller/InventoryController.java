@@ -31,6 +31,11 @@ public class InventoryController {
         return inventoryService.save(ingredient);
     }
 
+    @PutMapping("/{id}")
+    public Ingredient update(@PathVariable Long id, @RequestBody Ingredient ingredient) {
+        return inventoryService.update(id, ingredient);
+    }
+
     @PostMapping("/check-and-reserve")
     public ResponseEntity<CheckAndReserveResponse> checkAndReserve(
             @Valid @RequestBody CheckAndReserveRequest request) {
