@@ -1,0 +1,116 @@
+[33mcommit 405ee398e618f03bde635807d46fca3ae74b7ae1[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32m5_message_queue[m[33m)[m
+Author: mazilustefan <mazilustefan956@gmail.com>
+Date:   Sun Dec 7 13:20:23 2025 +0200
+
+    Add RabbitMQ integration between OrderService and InventoryService
+
+[33mcommit 88172f560d2a70757410dd0fd3588047c6242365[m
+Author: mazilustefan <mazilustefan956@gmail.com>
+Date:   Sun Dec 7 13:18:47 2025 +0200
+
+    Add PUT endpoint for updating inventory
+
+[33mcommit e8df181e34d93e083d5516682392ae30735821fb[m[33m ([m[1;31morigin/3_software_designs[m[33m, [m[1;32m3_software_designs[m[33m)[m
+Author: Abd210 <150333656+Abd210@users.noreply.github.com>
+Date:   Thu Dec 4 21:07:50 2025 +0200
+
+    we did it
+
+[33mcommit 88ff98e2b98b5d84ad5dd96273c08faf405d1026[m
+Author: Abd210 <150333656+Abd210@users.noreply.github.com>
+Date:   Mon Dec 1 20:58:01 2025 +0200
+
+    we did it again
+
+[33mcommit 5d93e67441d5a1f2fe77a86f606e9b38eea4ec5a[m
+Author: Abd210 <150333656+Abd210@users.noreply.github.com>
+Date:   Sat Nov 29 23:26:13 2025 +0200
+
+    we did it
+
+[33mcommit e20d59198ee3e700a0b3c2f23114ec54f2a07353[m
+Author: scarletwtc <elglayla@gmail.com>
+Date:   Wed Nov 19 18:25:24 2025 +0200
+
+    ,
+
+[33mcommit fc5b9ee9e70f7ce27359f515082bb83c053df0b5[m
+Author: scarletwtc <elglayla@gmail.com>
+Date:   Wed Nov 12 06:45:40 2025 +0200
+
+    Update ArchitectureDesigns.md
+
+[33mcommit cc4f62cf148395513de0689ee34b5a4e5cff9a0b[m
+Author: scarletwtc <elglayla@gmail.com>
+Date:   Wed Nov 12 06:21:12 2025 +0200
+
+    .
+
+[33mcommit cbf4449b29ef69c1daeaff0f9adc9e7c5c289bba[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m
+Merge: 0d7ddbb a22ecf5
+Author: Layla El Ghoul <147739990+Scarletwtc@users.noreply.github.com>
+Date:   Wed Nov 12 05:52:50 2025 +0200
+
+    Merge pull request #3 from Scarletwtc/3_software_architecture_designs
+    
+    3 software architecture designs
+
+[33mcommit a22ecf5894a572d7363c326ce976081f9d834e95[m
+Author: scarletwtc <elglayla@gmail.com>
+Date:   Wed Nov 12 05:52:35 2025 +0200
+
+    Update ArchitectureDesigns.md
+
+[33mcommit ee4cc37149cf3355d8b7765affebe4cfd91be729[m
+Author: scarletwtc <elglayla@gmail.com>
+Date:   Wed Nov 12 05:51:01 2025 +0200
+
+    ,
+
+[33mcommit 084a426966538c31eca5f3bc28de3b2c85eb3eb1[m
+Author: scarletwtc <elglayla@gmail.com>
+Date:   Wed Nov 12 04:37:56 2025 +0200
+
+    .
+
+[33mcommit 0d7ddbbc6285980f089a7664669fbde47cceb6f0[m
+Merge: 4256c02 4e49a99
+Author: Layla El Ghoul <147739990+Scarletwtc@users.noreply.github.com>
+Date:   Wed Nov 12 03:27:35 2025 +0200
+
+    Merge pull request #2 from Scarletwtc/2-Implementations_and_diagrams
+    
+    2 implementations and diagrams
+
+[33mcommit 4e49a992cc6fd0c0557ecdc901501ced01d9d74a[m[33m ([m[1;31morigin/2-Implementations_and_diagrams[m[33m)[m
+Author: scarletwtc <elglayla@gmail.com>
+Date:   Tue Nov 4 12:20:41 2025 +0200
+
+    java
+
+[33mcommit 92434e894611a44180c948d6d0722394a5bf2545[m
+Author: scarletwtc <elglayla@gmail.com>
+Date:   Tue Nov 4 12:16:11 2025 +0200
+
+    Add SmartCakeShop directory as part of parent repo
+
+[33mcommit 4256c0286f7be53dd9db70d3ab1e54c23cac26b9[m
+Merge: a2e178e b4c9fac
+Author: Layla El Ghoul <147739990+Scarletwtc@users.noreply.github.com>
+Date:   Tue Nov 4 12:01:32 2025 +0200
+
+    Merge pull request #1 from Scarletwtc/2-Implementations_and_diagrams
+    
+    milestone2
+
+[33mcommit b4c9fac371fa2572ed1e4e87317222e0f6224488[m
+Author: scarletwtc <elglayla@gmail.com>
+Date:   Tue Nov 4 11:49:02 2025 +0200
+
+    milestone2
+
+[33mcommit a2e178e98fbc8a3caffa15f079b093627e13bb3e[m
+Author: Layla El Ghoul <147739990+Scarletwtc@users.noreply.github.com>
+Date:   Mon Oct 13 20:35:22 2025 +0300
+
+    Initial commit

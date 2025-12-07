@@ -1,6 +1,18 @@
 version: "3.9"
 
 services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"     
+      - "15672:15672"   
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - keki-net
+
   orderservice-db:
     image: postgres:16-alpine
     environment:
@@ -39,6 +51,7 @@ services:
       context: ./orderservice
     depends_on:
       - orderservice-db
+      - rabbitmq
       - inventoryservice
     environment:
       DB_HOST: orderservice-db
@@ -58,6 +71,7 @@ services:
       context: ./inventoryservice
     depends_on:
       - inventoryservice-db
+      - rabbitmq
     environment:
       DB_HOST: inventoryservice-db
       DB_PORT: 5432

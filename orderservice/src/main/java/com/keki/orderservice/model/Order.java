@@ -35,7 +35,7 @@ public class Order {
     public Order() {
         this.createdAt = Instant.now();
         this.updatedAt = Instant.now();
-        this.status = OrderStatus.NEW;
+        this.status = OrderStatus.PENDING_INVENTORY;
     }
 
     public void attach(OrderObserver observer) {

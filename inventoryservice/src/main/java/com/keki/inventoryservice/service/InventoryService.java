@@ -72,7 +72,6 @@ public class InventoryService {
 
     @Transactional
     public boolean checkAndReserve(Map<String, Integer> items) {
-        // Check if all items have sufficient stock
         for (Map.Entry<String, Integer> entry : items.entrySet()) {
             String name = entry.getKey();
             int requestedQty = entry.getValue();
@@ -80,11 +79,11 @@ public class InventoryService {
             Ingredient ingredient = ingredientRepository.findByName(name).orElse(null);
 
             if (ingredient == null || ingredient.getQuantity() < requestedQty) {
-                return false; // Insufficient stock
+                return false; 
             }
         }
 
-        // Reserve (decrement) all items
+
         for (Map.Entry<String, Integer> entry : items.entrySet()) {
             String name = entry.getKey();
             int requestedQty = entry.getValue();

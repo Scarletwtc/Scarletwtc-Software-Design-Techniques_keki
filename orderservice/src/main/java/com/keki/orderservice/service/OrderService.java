@@ -1,8 +1,9 @@
 package com.keki.orderservice.service;
 
-import com.keki.orderservice.client.InventoryClient;
 import com.keki.orderservice.client.KitchenClient;
+import com.keki.orderservice.config.RabbitConfig;
 import com.keki.orderservice.dto.CreateOrderRequest;
+import com.keki.orderservice.dto.OrderPlacedEvent;
 import com.keki.orderservice.dto.OrderResponse;
 import com.keki.orderservice.factory.OrderFactory;
 import com.keki.orderservice.model.Cake;
@@ -11,6 +12,9 @@ import com.keki.orderservice.model.OrderStatus;
 import com.keki.orderservice.observer.ChefObserver;
 import com.keki.orderservice.observer.StaffObserver;
 import com.keki.orderservice.repository.OrderRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,26 +24,23 @@ import java.util.stream.Collectors;
 @Service
 public class OrderService {
 
+    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
+
     private final OrderRepository orderRepository;
-    private final InventoryClient inventoryClient;
     private final KitchenClient kitchenClient;
+    private final RabbitTemplate rabbitTemplate;
     private final OrderFactory orderFactory = new OrderFactory();
 
     public OrderService(OrderRepository orderRepository,
-                        InventoryClient inventoryClient,
-                        KitchenClient kitchenClient) {
+                        KitchenClient kitchenClient,
+                        RabbitTemplate rabbitTemplate) {
         this.orderRepository = orderRepository;
-        this.inventoryClient = inventoryClient;
         this.kitchenClient = kitchenClient;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     @Transactional
     public OrderResponse createOrder(CreateOrderRequest request) {
-        boolean reserved = inventoryClient.checkAndReserveStandardCakeIngredients(request.getQuantity());
-        if (!reserved) {
-            throw new IllegalStateException("Insufficient inventory for standard cake");
-        }
-
         Order order = orderFactory.createStandardCakeOrder("Standard");
         order.setCustomerName(request.getCustomerName());
 
@@ -50,13 +51,21 @@ public class OrderService {
         order.attach(new ChefObserver());
         order.attach(new StaffObserver());
 
-        order.updateStatus(OrderStatus.IN_PROGRESS);
-
         order = orderRepository.save(order);
 
-        Long kitchenOrderId = kitchenClient.createKitchenOrder(order.getId(), cake.getName());
-        order.setKitchenOrderId(kitchenOrderId);
-        order = orderRepository.save(order);
+        OrderPlacedEvent event = new OrderPlacedEvent(
+                order.getId(),
+                cake.getName(),
+                request.getQuantity()
+        );
+
+        rabbitTemplate.convertAndSend(
+                RabbitConfig.EXCHANGE_NAME,
+                "order.placed",
+                event
+        );
+
+        logger.info("Published order.placed event for order {}", order.getId());
 
         return toResponse(order);
     }

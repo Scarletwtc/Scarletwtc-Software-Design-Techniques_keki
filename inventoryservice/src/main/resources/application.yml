@@ -4,6 +4,11 @@ server:
 spring:
   application:
     name: inventoryservice
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: guest
+    password: guest
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:inventorydb}
     username: ${DB_USER:inventory_user}

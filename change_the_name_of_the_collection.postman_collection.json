@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "cb853cfd-7084-47ce-8611-d6c70d1862e6",
-		"name": "change_the_name_of_the_collection",
+		"name": "Smart Cake Shop - RabbitMQ Integration",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "41470721"
 	},
@@ -12,12 +12,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8082/api/inventory",
+					"raw": "http://localhost:8080/api/inventory",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "8082",
+					"port": "8080",
 					"path": [
 						"api",
 						"inventory"
@@ -27,13 +27,13 @@
 			"response": []
 		},
 		{
-			"name": " Seed / update a single ingredient",
+			"name": "Seed ingredient (create new)",
 			"request": {
 				"method": "POST",
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n  \"name\": \"Egg\",\r\n  \"quantity\": 30\r\n}",
+					"raw": "{\r\n  \"name\": \"Flour\",\r\n  \"quantity\": 50\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -41,15 +41,52 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8082/api/inventory",
+					"raw": "http://localhost:8080/api/inventory",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "8082",
+					"port": "8080",
 					"path": [
 						"api",
 						"inventory"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update ingredient (modify existing)",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"Flour\",\r\n  \"quantity\": 100\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/inventory/:id",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"inventory",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "2",
+							"description": "Ingredient ID"
+						}
 					]
 				}
 			},
@@ -70,12 +107,12 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8082/api/inventory/check-and-reserve",
+					"raw": "http://localhost:8080/api/inventory/check-and-reserve",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "8082",
+					"port": "8080",
 					"path": [
 						"api",
 						"inventory",
@@ -86,7 +123,7 @@
 			"response": []
 		},
 		{
-			"name": "Create standard cake order (happy path)",
+			"name": "Create order (async with RabbitMQ)",
 			"request": {
 				"method": "POST",
 				"header": [],
@@ -100,12 +137,12 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/api/orders",
+					"raw": "http://localhost:8080/api/orders",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "8081",
+					"port": "8080",
 					"path": [
 						"api",
 						"orders"
