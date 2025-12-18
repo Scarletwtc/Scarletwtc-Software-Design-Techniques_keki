@@ -21,37 +21,126 @@ Each service:
 
 - Runs as an independent **Spring Boot** application.
 - Owns its **own PostgreSQL database** (one DB per service).
-- Exposes a **REST API** and communicates with other services over HTTP.
+- Exposes a **REST API** and communicates asynchronously via **RabbitMQ message queue**.
 - Is packaged with a dedicated **Dockerfile** and wired together via `docker-compose.yml`.
 
 The original Java desktop prototype with design patterns remains in the `SmartCakeShop` folder for reference; the microservices implementation reuses those ideas in a distributed architecture.
 
 ---
 
-## How the Three Services Communicate
+## Message Queue Integration with RabbitMQ
 
-- **Order → Inventory**: when a customer places a *standard cake* order, `orderservice` calls `inventoryservice` (`/api/inventory/check-and-reserve`) to **check and reserve** flour, sugar, eggs, etc.
-- **Order → Kitchen**: if inventory is sufficient, `orderservice` persists the new order (status = `IN_PROGRESS`) and calls `kitchenservice` (`/api/kitchen/orders`) to create a **kitchen order ticket**.
-- **Kitchen → Order**: when the **chef** or **staff** update a kitchen order (`READY` / `DELIVERED`), `kitchenservice` calls back into `orderservice` (`/api/orders/{id}/status`) so the main order status stays in sync.
+The system uses **RabbitMQ** as a message broker to enable **asynchronous, event-driven communication** between services. This provides significant architectural benefits over direct HTTP calls.
 
-This flow implements the **“standard cake”** sequence from the diagrams in a microservices style:
+### Architecture Overview
 
-1. **Customer → Order Service**: place order for a standard cake.
-2. **Order Service → Inventory Service**: check stock and reserve ingredients.
-3. **Order Service → Kitchen Service**: create kitchen order; status becomes `IN_PROGRESS`.
-4. **Kitchen Service (Chef/Staff)**: update to `READY` then `DELIVERED`.
-5. **Kitchen Service → Order Service**: pushes status updates back, so observers (Chef/Staff) in `orderservice` are notified.
+**RabbitMQ Components:**
+- **Exchange**: `keki.exchange` (TopicExchange) - central message routing hub
+- **Queues**:
+  - `inventory.order-placed` - new orders requiring inventory validation
+  - `order.inventory-result` - inventory check results
+  - `kitchen.order-confirmed` - confirmed orders ready for kitchen preparation
 
-Internally, `orderservice` keeps the **Observer pattern** (Chef + Staff observers attached to an `Order`) and uses a **CakeBuilder** and **OrderFactory** for creating cake orders, matching the original class diagram.
+### Asynchronous Event Flow
+
+When a customer places an order, the following **asynchronous workflow** occurs:
+
+1. **OrderService** saves the order to database and publishes `order.placed` event to RabbitMQ - Returns immediately to customer (non-blocking) - Event contains: orderId, cakeName, quantity
+
+2. **InventoryService** listens on `inventory.order-placed` queue - Automatically receives the event via `@RabbitListener` - Checks ingredient stock (flour, sugar, eggs) - Publishes `inventory.result` event with success/failure status
+
+3. **OrderService** listens on `order.inventory-result` queue - Receives inventory check result - If successful: updates order status to CONFIRMED, publishes `order.confirmed` event - If failed: updates order status to REJECTED
+
+4. **KitchenService** listens on `kitchen.order-confirmed` queue - Receives confirmed orders - Creates kitchen order ticket - Updates order service with kitchen order ID
+
+### Benefits of Message Queue Architecture
+
+**A) Asynchronous Processing (Non-Blocking)**
+- Services don't wait for responses - they publish events and continue immediately
+- Customer receives instant confirmation without waiting for inventory checks
+- Dramatically improves response times and throughput
+- Example: OrderService can process 1000s of orders while InventoryService processes checks in background
+
+**B) Scalability**
+- Services can be scaled independently based on workload
+- Multiple instances consume from the same queue, automatically load balancing
+- Example: `docker compose up --scale inventoryservice=5` adds 5 workers sharing the queue
+- Messages queue up during high load, preventing system overload
+
+**C) Decoupling**
+- Services don't need to know each other's locations or ports
+- OrderService publishes events without knowing if/where InventoryService exists
+- Services can be deployed, updated, or replaced independently
+- Loose coupling enables independent development and deployment cycles
+
+**D) Fault Tolerance**
+- Messages persist in queues if services are temporarily down
+- When services restart, they process all queued messages (no data loss)
+- Durable queues survive RabbitMQ restarts
+- Failed processing can be retried automatically
+- Example: If InventoryService crashes, messages wait safely in queue
 
 ---
 
+## CI/CD Pipeline (GitHub Actions)
+
+A complete **Continuous Integration and Deployment** pipeline is configured in `.github/workflows/ci-cd.yml`. The pipeline automatically builds, tests, and deploys all services whenever code is pushed to the `5_message_queue` or `master` branch.
+
+### Pipeline Overview
+
+The pipeline consists of two main jobs:
+
+**Job 1: Build and Test**
+1. Checks out code from GitHub
+2. Sets up JDK 17 with Maven caching
+3. Builds all services (OrderService, InventoryService, KitchenService, API Gateway)
+4. **Runs unit tests** that validate RabbitMQ message queue integration
+5. Uploads JAR artifacts for deployment
+
+**Job 2: Docker Build and Deploy**
+1. Builds Docker images for all services
+2. Starts entire system with `docker compose up -d` - 3 microservices + API Gateway - 3 PostgreSQL databases - RabbitMQ with management UI
+3. Performs health checks on all services
+4. **Runs end-to-end test**: Creates order, verifies async processing through message queue
+5. On failure: automatically dumps container logs for debugging
+6. Cleans up: `docker compose down -v`
+
+### What the Tests Validate
+
+The unit tests specifically verify **RabbitMQ integration**:
+- **OrderService Tests**: Verify `order.placed` events are published to RabbitMQ
+- **InventoryService Tests**: Verify inventory checks publish correct `inventory.result` events
+- **KitchenService Tests**: Verify kitchen orders are created from `order.confirmed` events
+- **Event Handler Tests**: Verify `@RabbitListener` methods correctly process incoming messages
+
+### How to Observe the CI/CD Pipeline
+
+**View Pipeline Runs:**
+1. Go to GitHub repository
+2. Click **"Actions"** tab
+3. See all workflow runs with status
+4. Click any run to see detailed logs
+
+**Local Testing:**
+```bash
+# Run tests
+cd orderservice && mvn test
+cd ../inventoryservice && mvn test
+cd ../kitchenservice && mvn test
+```
+
+### Pipeline Triggers
+
+The pipeline automatically runs on:
+- Every push to `5_message_queue` branch
+- Every push to `master` branch  
+- Every pull request to `master` branch
 ## Running Everything with Docker Compose
 
 ### Prerequisites
 
 - **Docker** and **Docker Compose** installed.
-- No other services already listening on ports **8081, 8082, 8083** or **5433, 5434, 5435**.
+- No other services already listening on ports **8080, 8081, 8082, 8083**, **5433, 5434, 5435**, **5672**, or **15672**.
 
 ### Start the system
 
@@ -64,6 +153,7 @@ docker compose up --build
 This will:
 
 - Build and start:
+  - `rabbitmq` on ports `5672` (AMQP) and `15672` (Management UI)
   - `apigateway` on `http://localhost:8080` (single entry point for clients)
   - `orderservice` on `http://localhost:8081`
   - `inventoryservice` on `http://localhost:8082`
@@ -119,4 +209,4 @@ Optional Postman environment:
 ## Notes
 
 - Only the **three required services** are implemented in the microservices layer: `orderservice`, `inventoryservice`, and `kitchenservice`. There is **no** notification, reporting, or auth microservice in this implementation, as requested.
-- The legacy `SmartCakeShop` folder shows the original monolithic Java design patterns (Factory, Builder, Observer, Singleton); the new microservices reuse the same ideas while adding **service boundaries**, **separate databases**, and **Docker-based deployment**.
+- The legacy `SmartCakeShop` folder shows the original monolithic Java design patterns (Factory, Builder, Observer, Singleton); the new microservices reuse the same ideas while adding **service boundaries**, **separate databases**, **Docker-based deployment**, and **asynchronous communication via RabbitMQ**.
